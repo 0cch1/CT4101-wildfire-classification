@@ -5,6 +5,7 @@ from warnings import filterwarnings
 
 import matplotlib.pyplot as plt
 import pandas as pd
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.preprocessing import StandardScaler
@@ -88,21 +89,56 @@ def main() -> None:
     print("Confusion matrix:")
     print(confusion_matrix(y_test, best_test_pred))
 
-    for penalty_name in ('l2', 'none'):
-        subset = results[results['penalty'] == penalty_name]
-        xs = subset['C'].to_numpy()
-        plt.figure()
-        plt.plot(xs, subset['train_acc'], marker='o', label='train')
-        plt.plot(xs, subset['test_acc'], marker='o', label='test')
-        plt.xscale('log')
-        plt.xlabel('C (log scale)')
-        plt.ylabel('Accuracy')
-        plt.title(f'Accuracy vs C (penalty={penalty_name})')
-        plt.grid(alpha=0.3)
-        plt.legend()
-        plt.tight_layout()
-        plt.savefig(f'logreg_C_vs_acc_{penalty_name}.png', dpi=150)
-        plt.close()
+
+    print("\n=== Random Forest: Default Parameters ===")
+    rf_baseline = RandomForestClassifier(random_state=RANDOM_STATE, n_jobs=-1)
+    rf_baseline.fit(X_train, y_train)
+    print(f"Train accuracy: {rf_baseline.score(X_train, y_train):.4f}")
+    print(f"Test accuracy : {rf_baseline.score(X_test, y_test):.4f}")
+
+    print("\n=== Random Forest: Manual Hyperparameter Tuning ===")
+    n_estimators_list = (50, 100, 200, 400)
+    max_depth_list = (None, 10, 20)
+    rf_rows = []
+    for depth in max_depth_list:
+        for n_estimators in n_estimators_list:
+            rf = RandomForestClassifier(
+                n_estimators=n_estimators,
+                max_depth=depth,
+                random_state=RANDOM_STATE,
+                n_jobs=-1,
+            )
+            rf.fit(X_train, y_train)
+            rf_rows.append(
+                {
+                    'max_depth': 'None' if depth is None else depth,
+                    'n_estimators': n_estimators,
+                    'train_acc': rf.score(X_train, y_train),
+                    'test_acc': rf.score(X_test, y_test),
+                }
+            )
+
+    rf_results = pd.DataFrame(rf_rows).sort_values(['max_depth', 'n_estimators']).reset_index(drop=True)
+    print(rf_results)
+    rf_results.to_csv('rf_results.csv', index=False)
+
+    best_rf = rf_results.loc[rf_results['test_acc'].idxmax()]
+    print("\n[Best Random Forest model]")
+    print(best_rf)
+
+    plt.figure()
+    for depth_label, group in rf_results.groupby('max_depth'):
+        group = group.sort_values('n_estimators')
+        plt.plot(group['n_estimators'], group['test_acc'], marker='o', label=f"max_depth={depth_label}")
+    plt.xscale('log')
+    plt.xlabel('n_estimators (log scale)')
+    plt.ylabel('Test accuracy')
+    plt.title('Random Forest test accuracy vs n_estimators')
+    plt.grid(alpha=0.3)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig('rf_test_acc.png', dpi=150)
+    plt.close()
 
 if __name__ == '__main__':
     main()
