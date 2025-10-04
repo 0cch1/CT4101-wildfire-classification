@@ -1,32 +1,50 @@
 # CT4101 Assignment 1 - Classification using Scikit-learn
 
 ## Overview
-This project is part of **Machine Learning CT4101**.
-The goal is to implement classification models using **Scikit-learn**, train them on the provided wildfire datasets, and evaluate their performance under different hyperparameter settings.
+Implementation of two classification algorithms on wildfire prediction dataset:
+- **Logistic Regression** with hyperparameter tuning
+- **Random Forest** with 2 hyperparameters only (assignment requirement)
 
-This repository contains my implementation for **Algorithm 1 - Logistic Regression**.
-A second algorithm will be implemented separately in the same structure.
+---
+
+## Files
+
+- `ct4101_assignment.py` - Helper functions
+- `logisticRegression.ipynb` - Complete Logistic Regression analysis
+- `randomForest.ipynb` - Complete Random Forest analysis
+- `wildfires_training.csv` - Training data (77 samples)
+- `wildfires_test.csv` - Test data (50 samples)
 
 ---
 
 ## Dataset
-Two csv files:
-- `wildfire_training.csv`
-- `wildfire_test.csv`
-
-### Columns
-fire (target: yes/no), year, temp, humidity, rainfall, drought_code, buildup_index, day, month, wind_speed
-
-The task is to predict whether a wildfire(`fire`) occurs based on the other attributes.
+Features: year, temp, humidity, rainfall, drought_code, buildup_index, day, month, wind_speed
+Target: fire (yes/no)
 
 ---
 
-## How to run
+## How to Run
 
-1. Install dependencies (better in a virtual environment):
-  pip install -r requirements.txt
-or manually:
-  pip install pandas numpy scikit-learn matplotlib
+1. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
 
-2. Run the Logistic Regression script:
-  python ct1401.assignment.py
+2. Run Jupyter notebooks:
+```bash
+jupyter notebook
+# Open and run logisticRegression.ipynb and randomForest.ipynb
+```
+
+---
+
+## Results
+
+### Logistic Regression
+- Best: penalty='none', C=1.0
+- Test Accuracy: 90%
+
+### Random Forest
+- Best: max_depth=4, min_samples_leaf=4
+- Test Accuracy: 86%
+- Reduced overfitting gap from 16% to 8.8%
