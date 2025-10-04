@@ -88,17 +88,20 @@ def main() -> None:
     print(classification_report(y_test, best_test_pred))
     print("Confusion matrix:")
     print(confusion_matrix(y_test, best_test_pred))
-
-
     print("\n=== Random Forest: Default Parameters ===")
-    rf_baseline = RandomForestClassifier(random_state=RANDOM_STATE, n_jobs=-1)
+    rf_baseline = RandomForestClassifier(
+        n_estimators=200,
+        max_depth=8,
+        random_state=RANDOM_STATE,
+        n_jobs=-1,
+    )
     rf_baseline.fit(X_train, y_train)
     print(f"Train accuracy: {rf_baseline.score(X_train, y_train):.4f}")
     print(f"Test accuracy : {rf_baseline.score(X_test, y_test):.4f}")
 
     print("\n=== Random Forest: Manual Hyperparameter Tuning ===")
     n_estimators_list = (50, 100, 200, 400)
-    max_depth_list = (None, 10, 20)
+    max_depth_list = (6, 8, 10)
     rf_rows = []
     for depth in max_depth_list:
         for n_estimators in n_estimators_list:
@@ -111,7 +114,7 @@ def main() -> None:
             rf.fit(X_train, y_train)
             rf_rows.append(
                 {
-                    'max_depth': 'None' if depth is None else depth,
+                    'max_depth': depth,
                     'n_estimators': n_estimators,
                     'train_acc': rf.score(X_train, y_train),
                     'test_acc': rf.score(X_test, y_test),
@@ -122,14 +125,10 @@ def main() -> None:
     print(rf_results)
     rf_results.to_csv('rf_results.csv', index=False)
 
-    best_rf = rf_results.loc[rf_results['test_acc'].idxmax()]
-    print("\n[Best Random Forest model]")
-    print(best_rf)
-
     plt.figure()
-    for depth_label, group in rf_results.groupby('max_depth'):
+    for depth, group in rf_results.groupby('max_depth'):
         group = group.sort_values('n_estimators')
-        plt.plot(group['n_estimators'], group['test_acc'], marker='o', label=f"max_depth={depth_label}")
+        plt.plot(group['n_estimators'], group['test_acc'], marker='o', label=f"max_depth={depth}")
     plt.xscale('log')
     plt.xlabel('n_estimators (log scale)')
     plt.ylabel('Test accuracy')
@@ -140,5 +139,5 @@ def main() -> None:
     plt.savefig('rf_test_acc.png', dpi=150)
     plt.close()
 
-if __name__ == '__main__':
-    main()
+    if __name__ == '__main__':
+        main()
